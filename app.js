@@ -1,15 +1,18 @@
 import {World} from "./world.js";
+import {Controls} from "./controls.js";
 
 const world = new World();
 
-function animate(){
+const controls = new Controls(world);
 
-    requestAnimationFrame(animate);
+world.setControls(controls);
+
+world.renderer.setAnimationLoop(() => {
+
+    controls.update();
 
     world.update();
 
     world.render();
 
-}
-
-animate();
+});
