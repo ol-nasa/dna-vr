@@ -1,23 +1,29 @@
 import * as THREE from "three";
 
+
 export class Controls{
+
 
     constructor(world){
 
-        this.world = world;
 
-        this.camera = world.camera;
+        this.world=world;
 
-        this.keys = {};
-
-        this.speed = 0.08;
-
-        this.vrSpeed = 0.06;
-
-        this.turnSpeed = 0.03;
+        this.camera=world.camera;
 
 
-        // клавиатура
+        this.keys={};
+
+
+        this.speed=0.08;
+
+        this.vrSpeed=0.06;
+
+        this.turnSpeed=0.04;
+
+
+        this.vrSelect=false;
+
 
         document.addEventListener(
 
@@ -37,13 +43,15 @@ export class Controls{
         );
 
 
-        // мышь
 
         document.body.onclick=()=>{
 
-            document.body.requestPointerLock();
+            if(document.pointerLockElement===null)
+
+                document.body.requestPointerLock();
 
         };
+
 
 
         document.addEventListener(
@@ -52,7 +60,9 @@ export class Controls{
 
             e=>{
 
+
                 if(document.pointerLockElement){
+
 
                     this.camera.rotation.order="YXZ";
 
@@ -65,6 +75,7 @@ export class Controls{
                     this.camera.rotation.x-=
 
                         e.movementY*0.002;
+
 
 
                     this.camera.rotation.x=Math.max(
@@ -88,7 +99,6 @@ export class Controls{
         );
 
 
-        // VR контроллеры
 
         this.setupVR();
 
@@ -96,36 +106,56 @@ export class Controls{
 
 
 
+
+
     setupVR(){
 
-        const renderer=this.world.renderer;
 
-        if(!renderer.xr) return;
+        if(!this.world.renderer)
 
-
-        this.world.controller1 =
-
-            renderer.xr.getController(0);
+            return;
 
 
-        this.world.controller2 =
+        if(!this.world.renderer.xr)
 
-            renderer.xr.getController(1);
+            return;
 
 
 
-        this.world.scene.add(
-
-            this.world.controller1
-
-        );
+        this.world.renderer.xr.enabled=true;
 
 
-        this.world.scene.add(
 
-            this.world.controller2
+        this.world.controller1=
 
-        );
+            this.world.renderer.xr.getController(0);
+
+
+
+        this.world.controller2=
+
+            this.world.renderer.xr.getController(1);
+
+
+
+        if(this.world.scene){
+
+
+            this.world.scene.add(
+
+                this.world.controller1
+
+            );
+
+
+            this.world.scene.add(
+
+                this.world.controller2
+
+            );
+
+        }
+
 
 
         this.world.controller1.addEventListener(
@@ -134,7 +164,7 @@ export class Controls{
 
             ()=>{
 
-                this.world.vrSelect=true;
+                this.vrSelect=true;
 
             }
 
@@ -147,11 +177,12 @@ export class Controls{
 
             ()=>{
 
-                this.world.vrSelect=false;
+                this.vrSelect=false;
 
             }
 
         );
+
 
 
         this.world.controller2.addEventListener(
@@ -160,7 +191,7 @@ export class Controls{
 
             ()=>{
 
-                this.world.vrSelect=true;
+                this.vrSelect=true;
 
             }
 
@@ -173,32 +204,40 @@ export class Controls{
 
             ()=>{
 
-                this.world.vrSelect=false;
+                this.vrSelect=false;
 
             }
 
         );
+
 
     }
+
+
+
 
 
 
     update(){
 
 
-        // обычное движение
 
         const dir=new THREE.Vector3();
 
+
         this.camera.getWorldDirection(dir);
 
+
         dir.y=0;
+
 
         dir.normalize();
 
 
 
+
         const right=new THREE.Vector3();
+
 
         right.crossVectors(
 
@@ -207,6 +246,7 @@ export class Controls{
             new THREE.Vector3(0,1,0)
 
         );
+
 
 
 
@@ -221,6 +261,7 @@ export class Controls{
             );
 
 
+
         if(this.keys["KeyS"])
 
             this.camera.position.addScaledVector(
@@ -232,6 +273,7 @@ export class Controls{
             );
 
 
+
         if(this.keys["KeyA"])
 
             this.camera.position.addScaledVector(
@@ -241,6 +283,7 @@ export class Controls{
                 this.speed
 
             );
+
 
 
         if(this.keys["KeyD"])
@@ -257,7 +300,10 @@ export class Controls{
 
         this.updateVR();
 
+
     }
+
+
 
 
 
@@ -266,114 +312,165 @@ export class Controls{
     updateVR(){
 
 
+
+        if(!this.world.renderer.xr)
+
+            return;
+
+
+
         if(!this.world.renderer.xr.isPresenting)
 
             return;
 
 
 
-        const controller=
+        const session=
 
-            this.world.controller1;
-
-
-        if(!controller)
-
-            return;
+            this.world.renderer.xr.getSession();
 
 
-        const gamepad=
 
-            controller.gamepad;
-
-
-        if(!gamepad)
+        if(!session)
 
             return;
 
 
 
-        if(gamepad.axes.length<2)
 
-            return;
+        let left=null;
 
-
-
-        // разные VR контроллеры имеют разные оси
-
-        const moveX=
-
-            gamepad.axes[2] ?? gamepad.axes[0];
-
-
-        const moveY=
-
-            gamepad.axes[3] ?? gamepad.axes[1];
+        let rightPad=null;
 
 
 
-        const lookX=
-
-            gamepad.axes[0];
+        for(const source of session.inputSources){
 
 
 
-        const dir=new THREE.Vector3();
+            if(!source.gamepad)
 
-        this.camera.getWorldDirection(dir);
-
-        dir.y=0;
-
-        dir.normalize();
+                continue;
 
 
 
-        const right=new THREE.Vector3();
+            if(source.handedness==="left")
 
-        right.crossVectors(
-
-            dir,
-
-            new THREE.Vector3(0,1,0)
-
-        );
+                left=source.gamepad;
 
 
 
-        // движение левым стиком
+            if(source.handedness==="right")
 
-        this.camera.position.addScaledVector(
-
-            dir,
-
-            -moveY*this.vrSpeed
-
-        );
+                rightPad=source.gamepad;
 
 
-        this.camera.position.addScaledVector(
-
-            right,
-
-            moveX*this.vrSpeed
-
-        );
+        }
 
 
 
-        // поворот правым стиком
-
-        if(Math.abs(lookX)>0.1){
 
 
-            this.camera.rotation.y-=
 
-                lookX*this.turnSpeed;
+        if(left){
+
+
+
+            const x=
+
+                left.axes[2] ?? 0;
+
+
+
+            const y=
+
+                left.axes[3] ?? 0;
+
+
+
+
+            const dir=new THREE.Vector3();
+
+
+            this.camera.getWorldDirection(dir);
+
+
+            dir.y=0;
+
+
+            dir.normalize();
+
+
+
+
+            const side=new THREE.Vector3();
+
+
+            side.crossVectors(
+
+                dir,
+
+                new THREE.Vector3(0,1,0)
+
+            );
+
+
+
+            this.camera.position.addScaledVector(
+
+                dir,
+
+                -y*this.vrSpeed
+
+            );
+
+
+
+            this.camera.position.addScaledVector(
+
+                side,
+
+                x*this.vrSpeed
+
+            );
+
+
+        }
+
+
+
+
+
+
+
+        if(rightPad){
+
+
+
+            const x=
+
+                rightPad.axes[2] ?? 0;
+
+
+
+
+            if(Math.abs(x)>0.7){
+
+
+
+                this.camera.rotation.y-=
+
+                    Math.sign(x)*this.turnSpeed;
+
+
+
+            }
 
 
         }
 
 
     }
+
 
 }
