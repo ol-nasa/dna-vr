@@ -1,118 +1,378 @@
 import * as THREE from "three";
 
-import {VRButton}
-from "three/addons/webxr/VRButton.js";
+export class Controls{
 
-import {XRControllerModelFactory}
-from "three/addons/webxr/XRControllerModelFactory.js";
+    constructor(world){
 
-export class World{
+        this.world = world;
 
-    constructor(){
+        this.camera = world.camera;
 
-        this.scene = new THREE.Scene();
+        this.keys = {};
 
-        this.scene.background = new THREE.Color(0x050505);
+        this.speed = 0.08;
 
-        this.camera = new THREE.PerspectiveCamera(
+        this.vrSpeed = 0.06;
 
-            70,
-            window.innerWidth/window.innerHeight,
-            0.1,
-            5000
+        this.turnSpeed = 0.03;
 
-        );
 
-        this.camera.position.set(0,2,8);
+        // клавиатура
 
-        this.renderer = new THREE.WebGLRenderer({
+        document.addEventListener(
 
-            antialias:true
+            "keydown",
 
-        });
-
-        this.renderer.setSize(
-
-            window.innerWidth,
-            window.innerHeight
+            e=>this.keys[e.code]=true
 
         );
 
-        document.body.appendChild(this.renderer.domElement);
 
-        window.addEventListener("resize",()=>{
+        document.addEventListener(
 
-            this.camera.aspect =
-                window.innerWidth/window.innerHeight;
+            "keyup",
 
-            this.camera.updateProjectionMatrix();
+            e=>this.keys[e.code]=false
 
-            this.renderer.setSize(
+        );
 
-                window.innerWidth,
-                window.innerHeight
 
-            );
+        // мышь
 
-        });
+        document.body.onclick=()=>{
 
-        this.createLights();
+            document.body.requestPointerLock();
 
-        this.createTestCube();
+        };
+
+
+        document.addEventListener(
+
+            "mousemove",
+
+            e=>{
+
+                if(document.pointerLockElement){
+
+                    this.camera.rotation.order="YXZ";
+
+
+                    this.camera.rotation.y-=
+
+                        e.movementX*0.002;
+
+
+                    this.camera.rotation.x-=
+
+                        e.movementY*0.002;
+
+
+                    this.camera.rotation.x=Math.max(
+
+                        -Math.PI/2,
+
+                        Math.min(
+
+                            Math.PI/2,
+
+                            this.camera.rotation.x
+
+                        )
+
+                    );
+
+                }
+
+            }
+
+        );
+
+
+        // VR контроллеры
+
+        this.setupVR();
 
     }
 
-    createLights(){
 
-        const ambient =
-            new THREE.AmbientLight(0xffffff,2);
 
-        this.scene.add(ambient);
+    setupVR(){
 
-        const dir =
-            new THREE.DirectionalLight(0xffffff,1);
+        const renderer=this.world.renderer;
 
-        dir.position.set(5,10,8);
+        if(!renderer.xr) return;
 
-        this.scene.add(dir);
+
+        this.world.controller1 =
+
+            renderer.xr.getController(0);
+
+
+        this.world.controller2 =
+
+            renderer.xr.getController(1);
+
+
+
+        this.world.scene.add(
+
+            this.world.controller1
+
+        );
+
+
+        this.world.scene.add(
+
+            this.world.controller2
+
+        );
+
+
+        this.world.controller1.addEventListener(
+
+            "selectstart",
+
+            ()=>{
+
+                this.world.vrSelect=true;
+
+            }
+
+        );
+
+
+        this.world.controller1.addEventListener(
+
+            "selectend",
+
+            ()=>{
+
+                this.world.vrSelect=false;
+
+            }
+
+        );
+
+
+        this.world.controller2.addEventListener(
+
+            "selectstart",
+
+            ()=>{
+
+                this.world.vrSelect=true;
+
+            }
+
+        );
+
+
+        this.world.controller2.addEventListener(
+
+            "selectend",
+
+            ()=>{
+
+                this.world.vrSelect=false;
+
+            }
+
+        );
 
     }
 
-    createTestCube(){
 
-        const geo =
-            new THREE.BoxGeometry();
-
-        const mat =
-            new THREE.MeshStandardMaterial({
-
-                color:0x888888
-
-            });
-
-        const cube =
-            new THREE.Mesh(geo,mat);
-
-        this.scene.add(cube);
-
-        this.testCube = cube;
-
-    }
 
     update(){
 
-        this.testCube.rotation.y+=0.003;
+
+        // обычное движение
+
+        const dir=new THREE.Vector3();
+
+        this.camera.getWorldDirection(dir);
+
+        dir.y=0;
+
+        dir.normalize();
+
+
+
+        const right=new THREE.Vector3();
+
+        right.crossVectors(
+
+            dir,
+
+            new THREE.Vector3(0,1,0)
+
+        );
+
+
+
+        if(this.keys["KeyW"])
+
+            this.camera.position.addScaledVector(
+
+                dir,
+
+                this.speed
+
+            );
+
+
+        if(this.keys["KeyS"])
+
+            this.camera.position.addScaledVector(
+
+                dir,
+
+                -this.speed
+
+            );
+
+
+        if(this.keys["KeyA"])
+
+            this.camera.position.addScaledVector(
+
+                right,
+
+                this.speed
+
+            );
+
+
+        if(this.keys["KeyD"])
+
+            this.camera.position.addScaledVector(
+
+                right,
+
+                -this.speed
+
+            );
+
+
+
+        this.updateVR();
 
     }
 
-    render(){
 
-        this.renderer.render(
 
-            this.scene,
-            this.camera
+
+
+    updateVR(){
+
+
+        if(!this.world.renderer.xr.isPresenting)
+
+            return;
+
+
+
+        const controller=
+
+            this.world.controller1;
+
+
+        if(!controller)
+
+            return;
+
+
+        const gamepad=
+
+            controller.gamepad;
+
+
+        if(!gamepad)
+
+            return;
+
+
+
+        if(gamepad.axes.length<2)
+
+            return;
+
+
+
+        // разные VR контроллеры имеют разные оси
+
+        const moveX=
+
+            gamepad.axes[2] ?? gamepad.axes[0];
+
+
+        const moveY=
+
+            gamepad.axes[3] ?? gamepad.axes[1];
+
+
+
+        const lookX=
+
+            gamepad.axes[0];
+
+
+
+        const dir=new THREE.Vector3();
+
+        this.camera.getWorldDirection(dir);
+
+        dir.y=0;
+
+        dir.normalize();
+
+
+
+        const right=new THREE.Vector3();
+
+        right.crossVectors(
+
+            dir,
+
+            new THREE.Vector3(0,1,0)
 
         );
+
+
+
+        // движение левым стиком
+
+        this.camera.position.addScaledVector(
+
+            dir,
+
+            -moveY*this.vrSpeed
+
+        );
+
+
+        this.camera.position.addScaledVector(
+
+            right,
+
+            moveX*this.vrSpeed
+
+        );
+
+
+
+        // поворот правым стиком
+
+        if(Math.abs(lookX)>0.1){
+
+
+            this.camera.rotation.y-=
+
+                lookX*this.turnSpeed;
+
+
+        }
+
 
     }
 
