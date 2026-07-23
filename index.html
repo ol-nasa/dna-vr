@@ -28,16 +28,20 @@
     </a-scene>
 
     <script>
-      // 1. Вставьте сюда любую строку ДНК (из вашего FASTA-файла хромосомы 18)
-      const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGT".repeat(20);
+      // 1. Короткая тестовая последовательность ДНК (без опасных перегрузок)
+      const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGTATGCTAGCTAGC";
 
       const matrixContainer = document.getElementById('dna-matrix');
+      
+      // Считаем сторону куба так, чтобы он не превышал разумные размеры
       const side = Math.ceil(Math.pow(dnaSequence.length, 1/3));
       
+      // Четкие, бездушные индифферентные цвета
       const colors = { 'A': '#ffffff', 'T': '#b0b0b0', 'C': '#505050', 'G': '#101010' };
 
       let idx = 0;
-      // Генерируем кубики прямо в пространстве VR
+      
+      // Строим небольшую, безопасную матрицу для теста
       for (let z = 0; z < side; z++) {
         for (let y = 0; y < side; y++) {
           for (let x = 0; x < side; x++) {
@@ -46,21 +50,22 @@
             const char = dnaSequence[idx];
             const color = colors[char] || '#808080';
 
-            // Создаем 3D-куб (box) для каждого нуклеотида
             const box = document.createElement('a-box');
-            box.setAttribute('position', `${x * 1.5} ${y * 1.5} ${z * 1.5}`);
+            // Раздвигаем кубики чуть шире (на 2 метра), чтобы между ними можно было ходить
+            box.setAttribute('position', `${x * 2} ${y * 2} ${z * 2}`);
             box.setAttribute('width', '1');
             box.setAttribute('height', '1');
             box.setAttribute('depth', '1');
             box.setAttribute('color', color);
-            box.setAttribute('roughness', '0.8'); // Матовая индифферентная текстура
+            box.setAttribute('roughness', '0.9'); 
 
             matrixContainer.appendChild(box);
             idx++;
           }
         }
       }
-      console.log("VR инсталляция из кубиков ДНК успешно собрана!");
+      console.log("Легкая VR-инсталляция успешно собрана!");
     </script>
+  
   </body>
 </html>
