@@ -3,70 +3,78 @@
   <head>
     <meta charset="utf-8">
     <title>Экзистенциальный VR-Демонтаж ДНК</title>
-    <!-- ИСПРАВЛЕНО: Подключаем точную рабочую ссылку на библиотеку A-Frame -->
-    <script src="https://aframe.io"></script>
+    <!-- Подключаем самую стабильную официальную версию A-Frame на сегодняшний день -->
+    <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+
+    <script>
+      // Регистрируем кастомный компонент для сборки ДНК-матрицы
+      AFRAME.registerComponent('dna-generator', {
+        init: function () {
+          // Данный код выполнится строго ТОГДА, когда вся 3D-сцена будет полностью готова
+          const matrixContainer = this.el;
+          
+          // Тестовая последовательность букв
+          const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGTATGCTAGCTAGC";
+          
+          // Считаем шаг фрактальной сетки
+          const side = Math.ceil(Math.pow(dnaSequence.length, 1/3));
+          
+          // Индифферентные, бездушные цвета для деконструкции формы
+          const colors = { 'A': '#ffffff', 'T': '#b0b0b0', 'C': '#505050', 'G': '#101010' };
+
+          let idx = 0;
+          
+          for (let z = 0; z < side; z++) {
+            for (let y = 0; y < side; y++) {
+              for (let x = 0; x < side; x++) {
+                if (idx >= dnaSequence.length) break;
+
+                const char = dnaSequence[idx];
+                const color = colors[char] || '#808080';
+
+                // Создаем 3D-воксель
+                const box = document.createElement('a-box');
+                
+                // Центрируем облако кубов относительно стартовой точки камеры
+                const posX = (x - side/2) * 2;
+                const posY = (y - side/2) * 2 + 2; 
+                const posZ = (z - side/2) * 2;
+
+                box.setAttribute('position', `${posX} ${posY} ${posZ}`);
+                box.setAttribute('width', '1');
+                box.setAttribute('height', '1');
+                box.setAttribute('depth', '1');
+                box.setAttribute('color', color);
+                box.setAttribute('roughness', '0.9'); // Максимально матовая текстура без бликов
+
+                // Безопасно монтируем куб в 3D-пространство
+                matrixContainer.appendChild(box);
+                idx++;
+              }
+            }
+          }
+          console.log("Генератор ДНК: 3D инсталляция успешно собрана в памяти сцены!");
+        }
+      });
+    </script>
   </head>
   <body>
-    <!-- Создаем VR сцену -->
+    <!-- Инициализируем сцену -->
     <a-scene>
-      <!-- Небо (черное космическое пространство) -->
+      <!-- Черный космос без внешних ориентиров -->
       <a-sky color="#050505"></a-sky>
 
-      <!-- Окружающий тусклый свет, чтобы видеть грани серых кубиков -->
+      <!-- Настраиваем мягкий технический свет для прорисовки граней -->
       <a-light type="ambient" color="#666"></a-light>
       <a-light type="directional" color="#fff" position="-1 4 2"></a-light>
 
-      <!-- Точка старта пользователя (Камера смещена назад, чтобы сразу видеть кубы перед собой) -->
+      <!-- Точка старта (Камера отодвинута назад, чтобы куб висел прямо перед глазами) -->
       
         <a-camera></a-camera>
       
 
-      <!-- ИСПРАВЛЕНО: Вернули контейнер, куда скрипт будет складывать кубики ДНК -->
+      <!-- Наш контейнер, на который мы повесили зарегистрированный выше компонент 'dna-generator' -->
       
     </a-scene>
-
-    <script>
-      // 1. Короткая тестовая последовательность ДНК (без опасных перегрузок)
-      const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGTATGCTAGCTAGC";
-
-      const matrixContainer = document.getElementById('dna-matrix');
-      
-      // Считаем сторону куба так, чтобы он не превышал разумные размеры
-      const side = Math.ceil(Math.pow(dnaSequence.length, 1/3));
-      
-      // Четкие, бездушные индифферентные цвета
-      const colors = { 'A': '#ffffff', 'T': '#b0b0b0', 'C': '#505050', 'G': '#101010' };
-
-      let idx = 0;
-      
-      // Строим небольшую, безопасную матрицу для теста
-      for (let z = 0; z < side; z++) {
-        for (let y = 0; y < side; y++) {
-          for (let x = 0; x < side; x++) {
-            if (idx >= dnaSequence.length) break;
-
-            const char = dnaSequence[idx];
-            const color = colors[char] || '#808080';
-
-            const box = document.createElement('a-box');
-            // Центрируем матрицу кубов относительно камеры
-            const posX = (x - side/2) * 2;
-            const posY = (y - side/2) * 2 + 2; // приподнимем над полом
-            const posZ = (z - side/2) * 2;
-
-            box.setAttribute('position', `${posX} ${posY} ${posZ}`);
-            box.setAttribute('width', '1');
-            box.setAttribute('height', '1');
-            box.setAttribute('depth', '1');
-            box.setAttribute('color', color);
-            box.setAttribute('roughness', '0.9'); 
-
-            matrixContainer.appendChild(box);
-            idx++;
-          }
-        }
-      }
-      console.log("Легкая VR-инсталляция успешно собрана!");
-    </script>
   </body>
 </html>
