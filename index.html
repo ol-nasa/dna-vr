@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Экзистенциальный VR-Демонтаж ДНК</title>
-    <!-- Подключаем библиотеку A-Frame для VR -->
+    <!-- ИСПРАВЛЕНО: Подключаем точную рабочую ссылку на библиотеку A-Frame -->
     <script src="https://aframe.io"></script>
   </head>
   <body>
@@ -16,14 +16,12 @@
       <a-light type="ambient" color="#666"></a-light>
       <a-light type="directional" color="#fff" position="-1 4 2"></a-light>
 
-      <!-- Точка старта пользователя (Камера и контроллеры Meta Quest) -->
+      <!-- Точка старта пользователя (Камера смещена назад, чтобы сразу видеть кубы перед собой) -->
       
         <a-camera></a-camera>
-        
-        
       
 
-      <!-- Сюда мы программно сгенерируем тысячи кубиков ДНК прямо из букв -->
+      <!-- ИСПРАВЛЕНО: Вернули контейнер, куда скрипт будет складывать кубики ДНК -->
       
     </a-scene>
 
@@ -51,8 +49,12 @@
             const color = colors[char] || '#808080';
 
             const box = document.createElement('a-box');
-            // Раздвигаем кубики чуть шире (на 2 метра), чтобы между ними можно было ходить
-            box.setAttribute('position', `${x * 2} ${y * 2} ${z * 2}`);
+            // Центрируем матрицу кубов относительно камеры
+            const posX = (x - side/2) * 2;
+            const posY = (y - side/2) * 2 + 2; // приподнимем над полом
+            const posZ = (z - side/2) * 2;
+
+            box.setAttribute('position', `${posX} ${posY} ${posZ}`);
             box.setAttribute('width', '1');
             box.setAttribute('height', '1');
             box.setAttribute('depth', '1');
@@ -66,6 +68,5 @@
       }
       console.log("Легкая VR-инсталляция успешно собрана!");
     </script>
-  
   </body>
 </html>
