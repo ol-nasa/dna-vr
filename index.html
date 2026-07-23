@@ -1,73 +1,107 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Экзистенциальный VR-Демонтаж ДНК</title>
-    <!-- ПОДДКЛЮЧЕНА ЖЕЛЕЗОБЕТОННАЯ СТАБИЛЬНАЯ ССЫЛКА НА AFRAME -->
-<script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+<html lang="ru">
 
-    <script>
-      AFRAME.registerComponent('dna-generator', {
-        init: function () {
-          const matrixContainer = this.el;
-          
-          // Тестовая последовательность букв ДНК
-          const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGTATGCTAGCTAGC";
-          
-          // Индифферентные, бездушные цвета для деконструкции формы
-          const colors = { 'A': '#ffffff', 'T': '#b0b0b0', 'C': '#505050', 'G': '#101010' };
+<head>
 
-          // Упрощенный, легкий линейный алгоритм без вложенных циклов
-          // Строим куб из букв простым распределением по сетке
-          const step = 2; // Расстояние между кубиками в метрах
-          const sideSize = Math.ceil(Math.pow(dnaSequence.length, 1/3));
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-          for (let i = 0; i < dnaSequence.length; i++) {
-            const char = dnaSequence[i];
-            const color = colors[char] || '#808080';
+<title>DNA Space</title>
 
-            // Переводим одномерный индекс строки в 3D координаты (x, y, z)
-            const x = i % sideSize;
-            const y = Math.floor((i / sideSize) % sideSize);
-            const z = Math.floor(i / (sideSize * sideSize));
+<link rel="stylesheet" href="style.css">
 
-            const box = document.createElement('a-box');
-            
-            // Центрируем облако кубиков перед стартовой камерой
-            const posX = (x - sideSize / 2) * step;
-            const posY = (y - sideSize / 2) * step + 2; // Приподнимем над виртуальным полом
-            const posZ = (z - sideSize / 2) * step;
+</head>
 
-            box.setAttribute('position', `${posX} ${posY} ${posZ}`);
-            box.setAttribute('width', '1');
-            box.setAttribute('height', '1');
-            box.setAttribute('depth', '1');
-            box.setAttribute('color', color);
-            box.setAttribute('roughness', '0.9'); // Полностью матовые кубы
+<body>
 
-            matrixContainer.appendChild(box);
-          }
-          console.log("Генератор ДНК: 3D инсталляция успешно выведена на экран!");
-        }
-      });
-    </script>
-  </head>
-  <body>
-    <a-scene>
-      <!-- Глубокое черное пространство -->
-      <a-sky color="#050505"></a-sky>
+<div id="ui">
 
-      <!-- Настройка базового освещения граней -->
-      <a-light type="ambient" color="#666"></a-light>
-      <a-light type="directional" color="#fff" position="-1 4 2"></a-light>
+    <h1>DNA SPACE</h1>
 
-      <!-- Точка старта (Камера отодвинута назад на 10 метров, чтобы куб был виден сразу) -->
-      
-        <a-camera></a-camera>
-      
+    <div class="panel">
 
-      <!-- Контейнер для генерации кубов -->
-      
-    </a-scene>
-  </body>
+        <input
+            id="fileInput"
+            type="file"
+            accept=".gb,.gbk,.gbff,.fa,.fasta,.fna">
+
+        <button id="loadButton">
+            Построить мир
+        </button>
+
+    </div>
+
+    <div class="panel">
+
+        <label>
+
+            Размер кубика
+
+            <input
+                id="cubeSize"
+                type="range"
+                min="0.2"
+                max="2"
+                value="0.5"
+                step="0.1">
+
+        </label>
+
+        <label>
+
+            Расстояние
+
+            <input
+                id="spacing"
+                type="range"
+                min="0.5"
+                max="5"
+                value="1.0"
+                step="0.1">
+
+        </label>
+
+    </div>
+
+    <div class="panel">
+
+        <label>
+
+            Высота
+
+            <input
+                id="heightScale"
+                type="range"
+                min="0.2"
+                max="8"
+                value="1"
+                step="0.1">
+
+        </label>
+
+    </div>
+
+    <div id="status">
+
+        Выберите файл GenBank или FASTA
+
+    </div>
+
+</div>
+
+<div id="canvas"></div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three":"https://unpkg.com/three@0.167/build/three.module.js",
+        "three/addons/":"https://unpkg.com/three@0.167/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module" src="app.js"></script>
+
+</body>
+
 </html>
