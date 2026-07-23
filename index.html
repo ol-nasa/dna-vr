@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Экзистенциальный VR-Демонтаж ДНК</title>
+    <!-- Подключаем библиотеку A-Frame для VR -->
+    <script src="https://aframe.io"></script>
+  </head>
+  <body>
+    <!-- Создаем VR сцену -->
+    <a-scene>
+      <!-- Небо (черное космическое пространство) -->
+      <a-sky color="#050505"></a-sky>
+
+      <!-- Окружающий тусклый свет, чтобы видеть грани серых кубиков -->
+      <a-light type="ambient" color="#666"></a-light>
+      <a-light type="directional" color="#fff" position="-1 4 2"></a-light>
+
+      <!-- Точка старта пользователя (Камера и контроллеры Meta Quest) -->
+      
+        <a-camera></a-camera>
+        
+        
+      
+
+      <!-- Сюда мы программно сгенерируем тысячи кубиков ДНК прямо из букв -->
+      
+    </a-scene>
+
+    <script>
+      // 1. Вставьте сюда любую строку ДНК (из вашего FASTA-файла хромосомы 18)
+      const dnaSequence = "ATGCTAGCTAGCTAGCTAGCTAGCGATCGATCGATCGATCGATCGATTTTTACGT".repeat(20);
+
+      const matrixContainer = document.getElementById('dna-matrix');
+      const side = Math.ceil(Math.pow(dnaSequence.length, 1/3));
+      
+      const colors = { 'A': '#ffffff', 'T': '#b0b0b0', 'C': '#505050', 'G': '#101010' };
+
+      let idx = 0;
+      // Генерируем кубики прямо в пространстве VR
+      for (let z = 0; z < side; z++) {
+        for (let y = 0; y < side; y++) {
+          for (let x = 0; x < side; x++) {
+            if (idx >= dnaSequence.length) break;
+
+            const char = dnaSequence[idx];
+            const color = colors[char] || '#808080';
+
+            // Создаем 3D-куб (box) для каждого нуклеотида
+            const box = document.createElement('a-box');
+            box.setAttribute('position', `${x * 1.5} ${y * 1.5} ${z * 1.5}`);
+            box.setAttribute('width', '1');
+            box.setAttribute('height', '1');
+            box.setAttribute('depth', '1');
+            box.setAttribute('color', color);
+            box.setAttribute('roughness', '0.8'); // Матовая индифферентная текстура
+
+            matrixContainer.appendChild(box);
+            idx++;
+          }
+        }
+      }
+      console.log("VR инсталляция из кубиков ДНК успешно собрана!");
+    </script>
+  </body>
+</html>
