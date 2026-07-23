@@ -1,98 +1,93 @@
 import * as THREE from "three";
 
 
-export class Controls{
+export class World{
 
 
-    constructor(world){
+    constructor(){
 
 
-        this.world=world;
-
-        this.camera=world.camera;
+        this.scene = new THREE.Scene();
 
 
-        this.keys={};
+        this.scene.background =
+
+            new THREE.Color(0x050505);
 
 
-        this.speed=0.08;
 
-        this.vrSpeed=0.06;
+        this.camera = new THREE.PerspectiveCamera(
 
-        this.turnSpeed=0.04;
+            70,
 
+            window.innerWidth/window.innerHeight,
 
-        this.vrSelect=false;
+            0.1,
 
-
-        document.addEventListener(
-
-            "keydown",
-
-            e=>this.keys[e.code]=true
+            5000
 
         );
 
 
-        document.addEventListener(
+        this.camera.position.set(0,2,8);
 
-            "keyup",
 
-            e=>this.keys[e.code]=false
+
+        this.renderer = new THREE.WebGLRenderer({
+
+            antialias:true
+
+        });
+
+
+
+        this.renderer.setSize(
+
+            window.innerWidth,
+
+            window.innerHeight
 
         );
 
 
 
-        document.body.onclick=()=>{
-
-            if(document.pointerLockElement===null)
-
-                document.body.requestPointerLock();
-
-        };
+        this.renderer.xr.enabled = true;
 
 
 
-        document.addEventListener(
+        document.body.appendChild(
 
-            "mousemove",
+            this.renderer.domElement
 
-            e=>{
-
-
-                if(document.pointerLockElement){
-
-
-                    this.camera.rotation.order="YXZ";
-
-
-                    this.camera.rotation.y-=
-
-                        e.movementX*0.002;
-
-
-                    this.camera.rotation.x-=
-
-                        e.movementY*0.002;
+        );
 
 
 
-                    this.camera.rotation.x=Math.max(
+        window.addEventListener(
 
-                        -Math.PI/2,
+            "resize",
 
-                        Math.min(
+            ()=>{
 
-                            Math.PI/2,
 
-                            this.camera.rotation.x
+                this.camera.aspect =
 
-                        )
+                    window.innerWidth/window.innerHeight;
 
-                    );
 
-                }
+
+                this.camera.updateProjectionMatrix();
+
+
+
+                this.renderer.setSize(
+
+                    window.innerWidth,
+
+                    window.innerHeight
+
+                );
+
 
             }
 
@@ -100,7 +95,10 @@ export class Controls{
 
 
 
-        this.setupVR();
+        this.createLights();
+
+        this.createTestCube();
+
 
     }
 
@@ -108,111 +106,96 @@ export class Controls{
 
 
 
-    setupVR(){
+    createLights(){
 
 
-        if(!this.world.renderer)
+        const ambient =
 
-            return;
+            new THREE.AmbientLight(
 
+                0xffffff,
 
-        if(!this.world.renderer.xr)
-
-            return;
-
-
-
-        this.world.renderer.xr.enabled=true;
-
-
-
-        this.world.controller1=
-
-            this.world.renderer.xr.getController(0);
-
-
-
-        this.world.controller2=
-
-            this.world.renderer.xr.getController(1);
-
-
-
-        if(this.world.scene){
-
-
-            this.world.scene.add(
-
-                this.world.controller1
+                2
 
             );
 
 
-            this.world.scene.add(
+        this.scene.add(ambient);
 
-                this.world.controller2
+
+
+
+        const dir =
+
+            new THREE.DirectionalLight(
+
+                0xffffff,
+
+                1
 
             );
 
-        }
 
+        dir.position.set(
 
+            5,
 
-        this.world.controller1.addEventListener(
+            10,
 
-            "selectstart",
-
-            ()=>{
-
-                this.vrSelect=true;
-
-            }
+            8
 
         );
 
 
-        this.world.controller1.addEventListener(
-
-            "selectend",
-
-            ()=>{
-
-                this.vrSelect=false;
-
-            }
-
-        );
-
-
-
-        this.world.controller2.addEventListener(
-
-            "selectstart",
-
-            ()=>{
-
-                this.vrSelect=true;
-
-            }
-
-        );
-
-
-        this.world.controller2.addEventListener(
-
-            "selectend",
-
-            ()=>{
-
-                this.vrSelect=false;
-
-            }
-
-        );
+        this.scene.add(dir);
 
 
     }
 
+
+
+
+
+
+    createTestCube(){
+
+
+        const geo =
+
+            new THREE.BoxGeometry();
+
+
+
+        const mat =
+
+            new THREE.MeshStandardMaterial({
+
+                color:0x888888
+
+            });
+
+
+
+        const cube =
+
+            new THREE.Mesh(
+
+                geo,
+
+                mat
+
+            );
+
+
+
+        this.scene.add(cube);
+
+
+
+        this.testCube=cube;
+
+
+    }
 
 
 
@@ -221,84 +204,7 @@ export class Controls{
     update(){
 
 
-
-        const dir=new THREE.Vector3();
-
-
-        this.camera.getWorldDirection(dir);
-
-
-        dir.y=0;
-
-
-        dir.normalize();
-
-
-
-
-        const right=new THREE.Vector3();
-
-
-        right.crossVectors(
-
-            dir,
-
-            new THREE.Vector3(0,1,0)
-
-        );
-
-
-
-
-        if(this.keys["KeyW"])
-
-            this.camera.position.addScaledVector(
-
-                dir,
-
-                this.speed
-
-            );
-
-
-
-        if(this.keys["KeyS"])
-
-            this.camera.position.addScaledVector(
-
-                dir,
-
-                -this.speed
-
-            );
-
-
-
-        if(this.keys["KeyA"])
-
-            this.camera.position.addScaledVector(
-
-                right,
-
-                this.speed
-
-            );
-
-
-
-        if(this.keys["KeyD"])
-
-            this.camera.position.addScaledVector(
-
-                right,
-
-                -this.speed
-
-            );
-
-
-
-        this.updateVR();
+        this.testCube.rotation.y+=0.003;
 
 
     }
@@ -307,167 +213,16 @@ export class Controls{
 
 
 
+    render(){
 
 
-    updateVR(){
+        this.renderer.render(
 
+            this.scene,
 
+            this.camera
 
-        if(!this.world.renderer.xr)
-
-            return;
-
-
-
-        if(!this.world.renderer.xr.isPresenting)
-
-            return;
-
-
-
-        const session=
-
-            this.world.renderer.xr.getSession();
-
-
-
-        if(!session)
-
-            return;
-
-
-
-
-        let left=null;
-
-        let rightPad=null;
-
-
-
-        for(const source of session.inputSources){
-
-
-
-            if(!source.gamepad)
-
-                continue;
-
-
-
-            if(source.handedness==="left")
-
-                left=source.gamepad;
-
-
-
-            if(source.handedness==="right")
-
-                rightPad=source.gamepad;
-
-
-        }
-
-
-
-
-
-
-        if(left){
-
-
-
-            const x=
-
-                left.axes[2] ?? 0;
-
-
-
-            const y=
-
-                left.axes[3] ?? 0;
-
-
-
-
-            const dir=new THREE.Vector3();
-
-
-            this.camera.getWorldDirection(dir);
-
-
-            dir.y=0;
-
-
-            dir.normalize();
-
-
-
-
-            const side=new THREE.Vector3();
-
-
-            side.crossVectors(
-
-                dir,
-
-                new THREE.Vector3(0,1,0)
-
-            );
-
-
-
-            this.camera.position.addScaledVector(
-
-                dir,
-
-                -y*this.vrSpeed
-
-            );
-
-
-
-            this.camera.position.addScaledVector(
-
-                side,
-
-                x*this.vrSpeed
-
-            );
-
-
-        }
-
-
-
-
-
-
-
-        if(rightPad){
-
-
-
-            const x=
-
-                rightPad.axes[2] ?? 0;
-
-
-
-
-            if(Math.abs(x)>0.7){
-
-
-
-                this.camera.rotation.y-=
-
-                    Math.sign(x)*this.turnSpeed;
-
-
-
-            }
-
-
-        }
+        );
 
 
     }
